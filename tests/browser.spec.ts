@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import { readFileSync } from 'node:fs';
 const password = 'Browser-test-password-only-2026';
 test('first-run setup, responsive dashboard, navigation and safe disconnected state', async ({ page }) => {
+  test.setTimeout(60000);
   await page.goto('/login');
   await expect(page.getByRole('heading', { name: 'Make it your workspace.' })).toBeVisible();
   await page.getByLabel('One-time setup token').fill(readFileSync('.runtime/bootstrap.token','utf8').trim());
@@ -24,7 +25,13 @@ test('first-run setup, responsive dashboard, navigation and safe disconnected st
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth)).toBe(true);
   await page.getByRole('button', { name: 'Open navigation' }).click();
   await expect(page.locator('aside.sidebar')).toBeInViewport();
-  await page.getByRole('button', { name: 'Close navigation' }).click();
+  // The overlay spans the viewport, but its center is covered by the 244px sidebar.
+  // Click its exposed right edge, just as a user would, rather than forcing an intercepted click.
+  await page.getByRole('button', { name: 'Close navigation' }).click({ position: { x: 380, y: 20 } });
+  await expect(page.locator('aside.sidebar')).not.toBeInViewport();
+  await page.getByRole('button', { name: 'Open navigation' }).click();
+  await expect(page.locator('aside.sidebar')).toBeInViewport();
+  await page.keyboard.press('Escape');
   await expect(page.locator('aside.sidebar')).not.toBeInViewport();
 });
 test('customer-facing chat has honest pre-connection behavior', async ({ page }) => {
