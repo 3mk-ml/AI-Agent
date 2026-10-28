@@ -1,0 +1,46 @@
+{
+  "name": "agentflow-ai",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "engines": { "node": ">=22.16.0 <25" },
+  "scripts": {
+    "dev": "next dev --hostname 127.0.0.1",
+    "build": "next build --webpack",
+    "start": "next start --hostname 127.0.0.1",
+    "typecheck": "tsc --noEmit",
+    "test": "node --test tests/*.test.mjs",
+    "test:e2e": "playwright test",
+    "setup": "node scripts/setup.mjs",
+    "migrate": "tsx scripts/migrate.ts",
+    "worker": "tsx scripts/worker.ts",
+    "telegram": "tsx scripts/telegram.ts",
+    "slack": "tsx scripts/slack.ts",
+    "ingress": "node scripts/ingress.mjs",
+    "workflows": "node scripts/workflows.mjs",
+    "doctor": "tsx scripts/doctor.ts"
+  },
+  "dependencies": {
+    "next": "16.3.0",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "pg": "^8.16.3",
+    "zod": "^4.1.12",
+    "dotenv": "^17.2.3",
+    "lucide-react": "0.468.0",
+    "@slack/socket-mode": "^2.0.5",
+    "nodemailer": "^7.0.12"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "tsx": "^4.20.6",
+    "@types/node": "^24.10.0",
+    "@types/react": "^19.2.2",
+    "@types/react-dom": "^19.2.2",
+    "@types/pg": "^8.15.6",
+    "@types/nodemailer": "^7.0.4",
+    "@playwright/test": "^1.56.1",
+    "tailwindcss": "^4.1.17",
+    "@tailwindcss/postcss": "^4.1.17"
+  }
+}

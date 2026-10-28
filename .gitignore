@@ -1,0 +1,12 @@
+node_modules/
+.next/
+.env*
+!.env.example
+.runtime/
+.agentflow/
+*.log
+*.tsbuildinfo
+playwright-report/
+test-results/
+coverage/
+.DS_Store
