@@ -1,0 +1,50 @@
+name: AgentFlow quality checks
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: quality-${{ github.ref }}
+  cancel-in-progress: true
+jobs:
+  verify:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 20
+    env:
+      NEXT_TELEMETRY_DISABLED: '1'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install project dependencies
+        run: npm install --no-audit --no-fund
+      - name: Unit and workflow-structure tests
+        run: npm test
+      - name: TypeScript check
+        run: npm run typecheck
+      - name: Production build
+        run: npm run build
+      - name: Install browser for visual smoke tests
+        if: runner.os == 'Linux'
+        run: npx playwright install --with-deps chromium
+      - name: Browser smoke tests (no external credentials)
+        if: runner.os == 'Linux'
+        run: npm run test:e2e
+      - name: Upload test evidence and resolved dependency lock
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: verification-${{ runner.os }}
+          path: |
+            test-results/
+            playwright-report/
+            package-lock.json
+          if-no-files-found: ignore
