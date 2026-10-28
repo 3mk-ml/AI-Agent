@@ -85,10 +85,16 @@ jobs:
           set -o pipefail
           mkdir -p test-results
           npx tsx --test tests/database.test.ts 2>&1 | tee test-results/database-tests.txt
-      - name: Upload database test evidence
+      - name: Install browser for database-backed operator journey
+        run: npx playwright install --with-deps chromium
+      - name: Test actual CRM, booking, inbox and customer session through the browser
+        run: npm run test:e2e
+      - name: Upload database and browser evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
           name: verification-PostgreSQL
-          path: test-results/database-tests.txt
+          path: |
+            test-results/
+            playwright-report/
           if-no-files-found: ignore
