@@ -41,7 +41,8 @@ test('database-backed operator journey and customer-session isolation', async ({
   await page.getByRole('button',{name:'Check availability'}).click();
   const time=new Date(chosen.start).toLocaleTimeString('en-GB',{timeZone:timezone,hour:'2-digit',minute:'2-digit'});
   await page.getByRole('button',{name:time,exact:true}).click();
-  await page.getByLabel('Customer',{exact:true}).selectOption(lead.id);
+  // Match the select's accessible role/name, not the wrapping label's option text.
+  await page.getByRole('combobox',{name:'Customer',exact:true}).selectOption(lead.id);
   await page.getByLabel('The customer confirmed this appointment time').check();
   await page.getByRole('button',{name:'Confirm booking',exact:true}).click();
   await expect(page.locator('table').getByText(name,{exact:true})).toBeVisible();
