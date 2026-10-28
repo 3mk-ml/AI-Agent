@@ -1,59 +1,119 @@
 # Verification record
 
-## Observed results — October 28, 2026
+## Verified source revision
 
-For commit `26a3c5604d3916562b05ae343ce1c0bc8b944d04`, GitHub Actions run [40624588788](https://github.com/3mk-ml/AI-Agent/actions/runs/40624588788) reported:
+**Source commit:** `dee7261e0049d74365d34b564eb68fdbacf24e06`  
+**Date:** October 28, 2026  
+**GitHub Actions:** [Run 40627068421 — all three jobs passed](https://github.com/3mk-ml/AI-Agent/actions/runs/40627068421)
+
+The subsequent handover commit changes documentation only. The source revision above is the exact code exercised by this record; later source changes require a new run.
+
+## Observed automated results
 
 | Check | Windows | Linux |
 |---|---|---|
 | Dependency installation | PASS | PASS |
-| 31 core/workflow-structure tests | PASS | PASS |
+| 31 core and workflow-structure tests | PASS | PASS |
 | TypeScript check | PASS | PASS |
 | Optimized Next.js production build | PASS | PASS |
-| Browser setup/navigation/mobile layout smoke test | Not run on Windows | PASS |
-| Customer-chat disconnected-state browser test | Not run on Windows | Failed test locator: matched both the application alert and Next.js route announcer |
+| Four credential-free browser smoke/security tests | Not run | PASS |
+| Twelve native PostgreSQL business scenarios | Not run | PASS |
+| One database-backed operator/customer browser journey | Not run | PASS |
 
-The ambiguous locator has been corrected in the next revision. Mobile screenshot capture now disables transitions and explicitly checks that the collapsed sidebar is outside the viewport. Two additional API authorization checks have been added. These changes require a new run; do not assume they passed from this historical record.
+The database test runner reports 13 passing Node test entries because it counts the enclosing parent test as well as its **12 business subtests**. Do not describe that as 13 independent business scenarios. Browser coverage is four credential-free cases plus one multi-step database-backed journey, for five browser tests.
 
-Separately, the exact core source blob `4899c4323cbc7339c8bf0cd43574655c417e12b3` passed 24 isolated Node.js tests locally. CI adds seven workflow structural checks, for 31 total. No core test calls real provider APIs.
+All jobs use native processes. The PostgreSQL job installs PostgreSQL and pgvector directly on its Linux runner; it does not use Docker. This verifies PostgreSQL behavior, not access to a user's hosted Supabase project.
 
-## What automated checks do not prove
+## What was exercised
 
-Workflow JSON tests verify names, graph edges, authentication configuration and the presence of real node types in the exports. They do not start n8n, import credentials or run a live AI conversation. Compilation and disconnected-page smoke tests do not prove database migrations, booking concurrency, embedding quality, provider delivery or restart recovery.
+### Core and workflow structure: 31 tests
 
-No Supabase, Gemini, Meta, Telegram or Slack production credentials were supplied to the build environment. All corresponding end-to-end tests remain **NOT RUN / require authorized account configuration**.
+Twenty-four core tests cover secret comparisons; signed token purpose, expiry and tampering; salted password hashes; Slack/Meta raw-body signatures and replay freshness; channel/account/session isolation; text chunking; vector validation; explicit lead scoring; retry bounds; the WhatsApp service-window boundary; secret redaction; Telegram commands/media/filtering; stable Slack DM keys and thread isolation; and WhatsApp account filtering.
 
-## Live acceptance matrix
+Seven workflow tests verify exported JSON graph structure, referenced nodes, inactive status, header authentication and the actual AI Agent/model/memory/six-tool configuration. These are **structural tests**, not an n8n runtime import or execution test.
 
-For each test record date, commit SHA, input, actual result, execution/provider IDs and PASS/FAIL/BLOCKED. Do not leave a checkbox implying success without evidence.
+### Native PostgreSQL: 12 business scenarios
 
-| ID | Test | Expected result | Current live status |
-|---|---|---|---|
-| L01 | Apply migrations to a fresh test database | Schema, indexes, constraints and memory table created | Not run |
-| L02 | Restart application/worker | Records remain and only one worker owns its lease | Not run |
-| L03 | Index fictional handbook | Actual embeddings, ready status and correct vector dimensions | Not run |
-| L04 | Ask supported company question | Retrieved evidence and grounded answer | Not run |
-| L05 | Ask unsupported lifetime-hosting question | Honest uncertainty; no invented policy | Not run |
-| L06 | Prompt injection in message/document | No secret disclosure or authorization bypass | Not run |
-| L07 | Two customer sessions | No cross-customer lead/history access | Not run |
-| L08 | Qualify a customer | Persistent own-lead record; explicit score factors; advisory enrichment | Not run |
-| L09 | Confirm an available appointment | Persistent booking and truthful confirmation | Not run |
-| L10 | Concurrent competing bookings | One reservation; conflict for the other | Not run |
-| L11 | Duplicate source/webhook event | One processed event/action, not duplicate records | Not run |
-| L12 | Human takeover during agent processing | Subsequent stale AI output suppressed | Not run |
-| L13 | Telegram inbound/outbound/operator reply | Actual messages and matching stored provider IDs | Not run |
-| L14 | Slack DM continuity and thread isolation | Correct memory scope and no reply loop | Not run |
-| L15 | WhatsApp receive/reply/status receipt | Correct account, provider IDs and delivery state | Not run |
-| L16 | WhatsApp closed service window | Free-form rejected; approved consented template only | Not run |
-| L17 | Email triage | Validated category/urgency/owner/summary/draft | Not run |
-| L18 | PDF/image invoice extraction | Structured facts with null unknowns and warnings | Not run |
-| L19 | Reviewed Airtable/Sheets export | Correct destination record; no unapproved send | Not run |
-| L20 | Follow-up inactivity/consent | One eligible draft; no automatic external message | Not run |
-| L21 | n8n controlled failure | Execution ID/reason recorded and configured alert sent | Not run |
-| L22 | Simulated outbound timeout after acceptance | Unknown state; no blind automatic resend | Not run |
+1. Apply migrations to a fresh database and rerun them safely.
+2. Submit the same inbound event concurrently and retain one message and one inbound job.
+3. Update a lead without losing earlier supplied facts; verify explicit score factors.
+4. Prevent a conversation from selecting another customer's lead through model arguments.
+5. Deduplicate source lead intake transactionally.
+6. Reject booking against another conversation's lead.
+7. Submit competing reservations simultaneously: exactly one succeeds and the other receives a conflict.
+8. Repeat a successful booking without creating a duplicate, and remove its slot from availability.
+9. Make human takeover idempotent, invalidate stale actions and suppress stale AI replies.
+10. Update inactivity when a customer returns and skip follow-ups without consent.
+11. Enforce database-backed request limits.
+12. Store and compare a real 768-dimensional pgvector value.
 
-## Reproduce automated checks
+The final vector fixture is explicitly synthetic. It proves storage/operator compatibility, **not** that Gemini generated an embedding or that retrieval quality is adequate.
 
-Use a clean checkout, install dependencies, then run `npm test`, `npm run typecheck`, `npm run build`. Browser tests require Playwright Chromium and a disposable runtime directory. The test account password/token are synthetic and used only in CI; never reuse them for a real workspace.
+### Browser checks
 
-Screenshots and reports, when available, are attached to the corresponding Actions run under `verification-Linux`. Inspect the run's commit SHA because later changes invalidate assumptions about an older result.
+The credential-free tests verify first-run administrator setup, navigation through the workspace, honest disconnected states, responsive mobile width, sidebar opening/closing including Escape, customer-chat configuration errors, rejection of unauthenticated access to CRM/settings/inbox/executions, and rejection of cross-origin authentication mutation.
+
+The database-backed browser journey uses a disposable database and fictional records. It:
+
+- Creates a customer through the CRM form and verifies the persisted row through the authenticated API.
+- Reads real available slots, selects a customer, explicitly confirms and saves an appointment.
+- Opens a website customer session and stores an inbound message.
+- Finds that conversation in Unified Inbox, takes over and queues an operator reply.
+- Confirms human mode and verifies a queued, undelivered operator reply is not falsely exposed as delivered to the customer.
+- Opens the populated overview and checks mobile overflow.
+
+The worker and external providers are deliberately not started during this browser journey. It verifies real application/database operations, **not an AI-generated reply or provider delivery**.
+
+## Visual evidence
+
+The run's `verification-PostgreSQL` artifact contains:
+
+- `test-results/relationships-populated.png`
+- `test-results/appointments-populated.png`
+- `test-results/inbox-populated.png`
+- `test-results/overview-populated.png`
+- `test-results/overview-populated-mobile.png`
+- `test-results/database-tests.txt`
+- The Playwright HTML report.
+
+The populated desktop dashboard, CRM, appointments, inbox and mobile overview were visually inspected. These are screenshots of the application backed by fictional CI test records, not live customer activity. The development-mode Next.js indicator can appear in screenshots; it is not an application control.
+
+The `verification-Linux` artifact contains the credential-free browser report/screenshots. Windows and Linux artifacts also include their resolved dependency lockfiles. Artifact retention is limited; download relevant evidence from the run before its configured expiry.
+
+## Defects found and repaired during verification
+
+Earlier iterations caught embedding/worker TypeScript errors, an ambiguous browser alert selector and a mobile-overlay test click hidden behind the sidebar. Those were corrected and rerun.
+
+The populated browser test then exposed a real website-session SQL error: one uncast parameter was used as both a UUID primary key and a text external key. The final source revision uses separate explicitly typed parameters. The complete customer-session and inbox journey now passes against native PostgreSQL.
+
+## Live integrations still NOT RUN
+
+No real Supabase, Gemini, Meta, Telegram or Slack credentials were supplied to the build environment. Provider authentication, quotas, account approvals and actual delivery cannot be inferred from compilation, mocks, normalized fixtures or local database tests.
+
+| Test | Current status / next evidence required |
+|---|---|
+| User's Supabase session-pooler and TLS connection | NOT RUN; configure the intended development project |
+| Real Gemini chat response and model quota | NOT RUN; authorized API key/model required |
+| Actual document embeddings and grounded retrieval | NOT RUN; index real demo text through Gemini |
+| n8n workflow import, credential binding and publication | NOT RUN against a running n8n instance |
+| Customer agent calling CRM/booking tools through n8n | NOT RUN; verify a correlated execution ID and resulting records |
+| Persistent n8n memory across restarts | NOT RUN |
+| Real Telegram inbound/outbound/operator reply | NOT RUN |
+| Real Slack DM/thread response and handoff notification | NOT RUN |
+| Real WhatsApp inbound/outbound/template and status receipt | NOT RUN |
+| Provider media download and Gemini interpretation | NOT RUN |
+| AI enrichment, triage, extraction and eligible follow-up drafting | NOT RUN against Gemini |
+| Reviewed Airtable or Google Sheets export | NOT RUN against destination accounts |
+| n8n error-trigger failure alert to Slack/SMTP | NOT RUN |
+| Outbound timeout/restart recovery with an actual provider | NOT RUN |
+| End-to-end prompt-injection and factual-grounding evaluation | NOT RUN against the configured model/knowledge base |
+
+Record commit SHA, date, inputs, actual result, execution/provider IDs and PASS/FAIL/BLOCKED for these tests. No configuration or import step alone should be marked as a successful live customer journey.
+
+## Reproduce
+
+Use a clean checkout, install dependencies, then run `npm test`, `npm run typecheck`, `npm run build`. Browser tests require Playwright Chromium and a disposable runtime directory. Do not run first-user setup tests against your personal configured workspace.
+
+The native database suite additionally requires `AGENTFLOW_DATABASE_TESTS=1` and a loopback database named exactly `agentflow_ci`; it refuses an arbitrary or remote database. This safeguard protects real data. The committed CI YAML is the reproducible reference for its setup.
+
+For Windows startup and account configuration, see [FIRST_RUN_CHECKLIST.md](FIRST_RUN_CHECKLIST.md). Use a fresh database for this implementation rather than applying its schema over an earlier independently generated Codex project.
