@@ -1,0 +1,12 @@
+BEGIN;
+SET LOCAL search_path=agentflow,public,extensions;
+ALTER TABLE jobs ADD COLUMN IF NOT EXISTS sequence bigint GENERATED ALWAYS AS IDENTITY;
+CREATE INDEX IF NOT EXISTS job_order ON jobs(status,run_at,sequence);
+ALTER TABLE automation_items ADD COLUMN IF NOT EXISTS exported_to text;
+ALTER TABLE automation_items ADD COLUMN IF NOT EXISTS export_status text;
+ALTER TABLE leads ADD COLUMN IF NOT EXISTS enrichment jsonb NOT NULL DEFAULT '{}';
+CREATE TABLE IF NOT EXISTS intake_events (event_key text PRIMARY KEY, lead_id uuid REFERENCES leads(id), created_at timestamptz NOT NULL DEFAULT now());
+ALTER TABLE intake_events ENABLE ROW LEVEL SECURITY;
+REVOKE ALL ON intake_events FROM PUBLIC;
+INSERT INTO migrations(id) VALUES('002_operations') ON CONFLICT DO NOTHING;
+COMMIT;
