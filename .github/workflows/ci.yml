@@ -48,3 +48,47 @@ jobs:
             playwright-report/
             package-lock.json
           if-no-files-found: ignore
+  database:
+    name: Native PostgreSQL business tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    env:
+      NEXT_TELEMETRY_DISABLED: '1'
+      AGENTFLOW_DATABASE_TESTS: '1'
+      DATABASE_URL: postgresql://postgres:agentflow-ci-disposable@127.0.0.1:5432/agentflow_ci
+      BUSINESS_TIMEZONE: Asia/Aden
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+      - name: Install project dependencies
+        run: npm install --no-audit --no-fund
+      - name: Start native PostgreSQL and install pgvector (no containers)
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update -qq
+          sudo apt-get install -y postgresql postgresql-contrib
+          PG_MAJOR=$(pg_lsclusters --no-header | awk 'NR==1 {print $1}')
+          PG_CLUSTER=$(pg_lsclusters --no-header | awk 'NR==1 {print $2}')
+          test -n "$PG_MAJOR"
+          sudo apt-get install -y "postgresql-${PG_MAJOR}-pgvector"
+          sudo pg_ctlcluster "$PG_MAJOR" "$PG_CLUSTER" start || sudo pg_ctlcluster "$PG_MAJOR" "$PG_CLUSTER" status
+          PG_PORT=$(pg_lsclusters --no-header | awk 'NR==1 {print $3}')
+          sudo -u postgres psql -p "$PG_PORT" -v ON_ERROR_STOP=1 -c "ALTER USER postgres WITH PASSWORD 'agentflow-ci-disposable';"
+          sudo -u postgres createdb -p "$PG_PORT" agentflow_ci
+          echo "DATABASE_URL=postgresql://postgres:agentflow-ci-disposable@127.0.0.1:${PG_PORT}/agentflow_ci" >> "$GITHUB_ENV"
+      - name: Exercise migrations and transactional business rules
+        shell: bash
+        run: |
+          set -o pipefail
+          mkdir -p test-results
+          npx tsx --test tests/database.test.ts 2>&1 | tee test-results/database-tests.txt
+      - name: Upload database test evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: verification-PostgreSQL
+          path: test-results/database-tests.txt
+          if-no-files-found: ignore
