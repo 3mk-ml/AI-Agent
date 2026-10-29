@@ -11,7 +11,7 @@
     "build": "next build --webpack",
     "start": "next start --hostname 127.0.0.1",
     "typecheck": "tsc --noEmit",
-    "test": "node --test tests/core.test.mjs tests/workflows.test.mjs",
+    "test": "node --test tests/core.test.mjs tests/workflows.test.mjs tests/secrets.test.mjs",
     "test:e2e": "playwright test",
     "setup": "node scripts/setup.mjs",
     "migrate": "tsx scripts/migrate.ts",
