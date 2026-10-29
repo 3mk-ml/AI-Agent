@@ -22,6 +22,8 @@ A native-Windows operations workspace that connects customer conversations to an
 
 No simulated AI replies, fabricated analytics or pretend delivery receipts. An unavailable integration produces a visible error.
 
+> **Credential setup:** Follow [secure credentials and live testing](docs/CREDENTIALS_SETUP.md). Generate local shared secrets with `npm run secrets:generate`; never commit provider keys or connection strings. Rotate any keys already shared outside the private service configuration.
+
 ## Run on Windows — no Docker
 
 Use Node.js 24 LTS and PowerShell. The application accepts Node 22.16–24; the separately installed n8n version may have stricter requirements. No Docker, WSL or local database server is required when using Supabase.
