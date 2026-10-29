@@ -3,7 +3,9 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "engines": { "node": ">=22.16.0 <25" },
+  "engines": {
+    "node": ">=22.16.0 <25"
+  },
   "scripts": {
     "dev": "next dev --hostname 127.0.0.1",
     "build": "next build --webpack",
@@ -19,7 +21,10 @@
     "ingress": "node scripts/ingress.mjs",
     "workflows": "node scripts/workflows.mjs",
     "workflows:import": "tsx scripts/import-workflows.ts",
-    "doctor": "tsx scripts/doctor.ts"
+    "doctor": "tsx scripts/doctor.ts",
+    "secrets:generate": "node scripts/generate-shared-secrets.mjs generate",
+    "secrets:show-n8n": "node scripts/generate-shared-secrets.mjs show-n8n",
+    "secrets:show-providers": "node scripts/generate-shared-secrets.mjs show-providers"
   },
   "dependencies": {
     "next": "16.3.0",
